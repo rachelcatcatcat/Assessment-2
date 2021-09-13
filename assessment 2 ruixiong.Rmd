@@ -1,0 +1,171 @@
+---
+title: "Assessment 2"
+author: "rachelxiong"
+date: "9/13/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Part 1: formatting RMarkdown document
+
+##*Rui Xiong* **s4647301**
+---
+#Assessment 2 - Practical assignment
+---
+![](rui xiong.JPG)
+
+
+```{r, echo=FALSE}
+library('tidyverse')
+meals <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-11-20/thanksgiving_meals.csv")
+library(knitr)
+```
+# Part 2: Data Wrangling and visualization
+
+### 1. Display the first 10 rows of the dataset using RMarkdown 
+```{r}
+head(meals,10)%>% kable()
+```
+### 2. Use `fct_reorder` and `parse_number` functions to create a factor variable `family_income`
+```{r}
+meals%>%mutate(family_income = fct_reorder(family_income, parse_number(family_income)))
+```
+
+### 3. Generate the general statistics of the dataset using `summary()` and `skim()` function 
+```{r}
+summary(meals)
+skimr::skim(meals)
+```
+
+### 4. What is the number of people who celebrate?
+```{r}
+meals%>%filter(celebrate == 'Yes')%>%count(celebrate)%>%kable()
+```
+
+### 5. What are categories and stats for each main dish served and the method it is prepared?
+```{r}
+meals%>%count(main_dish,main_prep)%>%kable()
+```
+
+### 6. Create a data viz showing this in the most evident way. Provide your own legend and use themes.
+```{r}
+meals%>%
+  count(main_dish,main_prep,sort = TRUE) %>% 
+  ggplot(aes(main_dish, n, fill = main_prep)) +
+  geom_col() +
+  coord_flip() +
+  theme_gray() +
+  labs(title="Main Dish Distribution")
+  
+```
+
+### 7. How many use cranberry sauce? How many use gravy?
+```{r}
+meals%>%
+  count(cranberry) %>%
+  summarise(cranberry_sauce = sum(n)) %>%
+  kable()
+meals%>%
+  count(gravy) %>%
+  filter(gravy == 'Yes') %>%
+  kable()
+```
+
+### 8. What is the distribution of those who celebrate across income ranges
+```{r}
+meals%>%
+  filter(celebrate == 'Yes') %>%
+  count(family_income) %>%
+  kable()
+```
+
+### 9. Present this information in the most evident way on the data viz.
+```{r}
+meals%>%
+  filter(celebrate=="Yes") %>%
+  count(family_income) %>%
+  ggplot(aes(family_income,n))+geom_col(fill="blue")+coord_flip()+theme_grey()+labs(title='The income distribution of people who celebrate Thanksgiving')
+```
+
+### 10. What are the most common pies, sides, and desserts?
+```{r}
+the_most_common_pies <- meals%>%
+  select(starts_with('pie')) %>%
+  gather(pietype,famouspie) %>%
+  filter(!is.na(famouspie)) %>%
+  count(famouspie = fct_lump(famouspie,1),sort = TRUE)%>%
+  mutate(famouspie = fct_reorder(famouspie, n))
+
+the_most_common_sides <- meals%>%
+  select(starts_with('side'))%>%
+  gather(sidetype,famousside)%>%
+  filter(!is.na(famousside))%>%
+  count(famousside = fct_lump(famousside,1),sort = TRUE)%>%
+  mutate(famousside = fct_reorder(famousside,n))
+
+the_most_commmon_desserts <- meals%>%
+  select(starts_with('dessert'))%>%
+  gather(dessertstype,famousdessert)%>%
+  filter(!is.na(famousdessert))%>%
+  count(famousdessert = fct_lump(famousdessert,2),sort = TRUE)%>%
+  mutate(famousdessert = fct_reorder(famousdessert,n))
+```
+
+### 11. Present this information on a data viz
+```{r}
+meals %>% 
+  select(starts_with('pie')) %>% 
+  gather(pietype,famouspie) %>% 
+  filter(!is.na(famouspie)) %>% 
+  mutate(famouspie = fct_lump(famouspie,5)) %>%
+  ggplot(aes(famouspie))+geom_bar(fill='pink')+coord_flip()+theme_dark()+labs(title='Most Common Pie in Thanksgiving')
+
+meals %>%
+  select(starts_with('side'))%>%
+  gather(sidetype,famousside)%>%
+  filter(!is.na(famousside))%>%
+  mutate(famousside = fct_lump(famousside,12))%>%
+  ggplot(aes(famousside))+geom_bar(fill='purple')+coord_flip()+theme_dark()+labs(title='Most Common Side in Thanksgiving')
+
+meals %>%
+  select(starts_with('dessert'))%>%
+  gather(desserttype, famousdessert)%>%
+  filter(!is.na(famousdessert))%>%
+  mutate(famousdessert = fct_lump(famousdessert,5))%>%
+  ggplot(aes(famousdessert))+geom_bar(fill='white')+coord_flip()+theme_dark()+labs(title='Most Common dessert in Thanksgiving')
+```
+
+### 13. How do the servings differ by income?
+```{r}
+meals%>%
+  group_by(family_income)%>%
+  count(family_income, main_dish, sort = TRUE)%>%
+  ungroup%>%
+  kable()
+
+```
+
+### 14. Present this information on a data viz
+```{r}
+meals %>% 
+  group_by(main_dish)%>% 
+  count(family_income, main_dish) %>% 
+  filter(!is.na(main_dish), !is.na(family_income)) %>% 
+  ungroup() %>%
+  ggplot(aes(family_income,n,fill=main_dish))+geom_col()+coord_flip()+theme_grey()+labs(title="Family Income distribution of different servings")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
